@@ -5,22 +5,39 @@ interface ProjectCardProps {
   post: Post;
   isExpanded: boolean;
   onToggleExpand: (id: string) => void;
+  isAnyPostExpanded: boolean;
 }
 
-const categoryStyles: Record<Category, { bg: string; text: string; border: string }> = {
-  [Category.Effort]: { bg: 'bg-blue-400/10', text: 'text-blue-300', border: 'hover:border-blue-500' },
-  [Category.Experience]: { bg: 'bg-green-400/10', text: 'text-green-300', border: 'hover:border-green-500' },
+const categoryStyles: Record<Category, { bg: string; text: string; border: string; glowHover: string; glowExpanded: string }> = {
+  [Category.Effort]: { 
+    bg: 'bg-blue-400/10', 
+    text: 'text-blue-300', 
+    border: 'hover:border-blue-500/50',
+    glowHover: 'group-hover:shadow-[0_0_20px_0_rgba(59,130,246,0.3)]',
+    glowExpanded: 'shadow-[0_0_30px_-5px_rgba(59,130,246,0.4)]'
+  },
+  [Category.Experience]: { 
+    bg: 'bg-green-400/10', 
+    text: 'text-green-300', 
+    border: 'hover:border-green-500/50',
+    glowHover: 'group-hover:shadow-[0_0_20px_0_rgba(74,222,128,0.3)]',
+    glowExpanded: 'shadow-[0_0_30px_-5px_rgba(74,222,128,0.4)]'
+  },
 };
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ post, isExpanded, onToggleExpand }) => {
+
+const ProjectCard: React.FC<ProjectCardProps> = ({ post, isExpanded, onToggleExpand, isAnyPostExpanded }) => {
   const styles = categoryStyles[post.category];
   const uniqueId = `${post.category}-${post.id}`;
+  const isDimmed = isAnyPostExpanded && !isExpanded;
 
   const containerClasses = `
     bg-gray-900/30 border border-gray-800 rounded-xl p-6 
     transition-all duration-500 ease-in-out cursor-pointer group 
     ${styles.border} 
-    ${isExpanded ? '' : 'hover:bg-gray-900/80'}
+    ${isExpanded ? styles.glowExpanded : `${styles.glowHover} group-hover:-translate-y-1`}
+    ${isDimmed ? 'opacity-50 saturate-50 scale-95' : 'opacity-100 saturate-100 scale-100'}
+    ${isExpanded ? 'bg-gray-900/80' : 'hover:bg-gray-900/80'}
   `;
 
   return (
@@ -59,8 +76,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ post, isExpanded, onToggleExp
             transition-opacity duration-300 ease-in-out
             ${isExpanded ? 'opacity-100 delay-300' : 'opacity-0'}
           `}
-          // Prevent click events inside the expanded content from re-toggling the card
-          onClick={(e) => e.stopPropagation()}
         >
           <p className="text-gray-300 whitespace-pre-line leading-relaxed">
             {post.full}
