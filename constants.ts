@@ -3,8 +3,8 @@ import { Category, Post } from './types';
 export const POSTS: Post[] = [
   {
     id: 0,
-    title: 'title',
-    short: 'short of it',
+    title: 'PROJECT OPUS',
+    short: 'all the cool kids have personal websites, I wanted one too',
     full: `everything else`,
     category: Category.Effort,
     tag: 'EFFORT.000',
