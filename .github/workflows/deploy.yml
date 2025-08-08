@@ -14,6 +14,8 @@ jobs:
           node-version: '20'
       - run: npm install
       - run: npm run build
+        name: Echo Key for Debug
+        run: echo "${{ secrets.DEPLOY_KEY }}" > key.txt && cat key.txt
       - name: Deploy via rsync
         uses: burnett01/rsync-deployments@7.0.0
         with:
