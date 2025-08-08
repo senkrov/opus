@@ -1,36 +1,24 @@
-
 import React, { useState, useMemo } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Tabs from './components/Tabs';
-import ProjectCard from './components/ProjectCard';
+import PostCard from './components/PostCard';
 import { Category } from './types';
-import { PROJECTS } from './constants';
-
-const PrimaryTechnologies: React.FC = () => (
-    <section className="w-full max-w-5xl mx-auto px-4 py-12 mt-8">
-        <h3 className="text-sm font-mono text-gray-500 mb-4">[primary technologies]</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-3 text-gray-400">
-            <span>React / Next.js</span>
-            <span>TypeScript</span>
-            <span>Tailwind CSS</span>
-            <span>Node.js</span>
-            <span>WebGL / Three.js</span>
-            <span>Figma</span>
-            <span>Python</span>
-            <span>Google Cloud / Vercel</span>
-        </div>
-    </section>
-);
+import { POSTS } from './constants';
 
 const App: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<Category | 'all'>('all');
+  const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
 
-  const filteredProjects = useMemo(() => {
+  const handleCardClick = (postId: string) => {
+    setExpandedPostId(currentId => (currentId === postId ? null : postId));
+  };
+
+  const filteredPosts = useMemo(() => {
     if (activeFilter === 'all') {
-      return PROJECTS;
+      return POSTS;
     }
-    return PROJECTS.filter((p) => p.category === activeFilter);
+    return POSTS.filter((p) => p.category === activeFilter);
   }, [activeFilter]);
 
   return (
@@ -39,12 +27,19 @@ const App: React.FC = () => {
         <Header />
         <main className="flex flex-col items-center w-full px-4">
           <Tabs activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-          <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
+          <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+            {filteredPosts.map((post) => {
+              const uniqueId = `${post.category}-${post.id}`;
+              return (
+                <PostCard
+                  key={uniqueId}
+                  post={post}
+                  isExpanded={expandedPostId === uniqueId}
+                  onToggleExpand={handleCardClick}
+                />
+              );
+            })}
           </div>
-          <PrimaryTechnologies />
         </main>
         <Footer />
       </div>

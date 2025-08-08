@@ -4,7 +4,7 @@ import { Post, Category } from '../types';
 interface PostCardProps {
   post: Post;
   isExpanded: boolean;
-  onToggleExpand: (id: number) => void;
+  onToggleExpand: (id: string) => void;
 }
 
 const categoryStyles: Record<Category, { bg: string; text: string; border: string }> = {
@@ -14,6 +14,7 @@ const categoryStyles: Record<Category, { bg: string; text: string; border: strin
 
 const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand }) => {
   const styles = categoryStyles[post.category];
+  const uniqueId = `${post.category}-${post.id}`;
 
   const containerClasses = `
     bg-gray-900/30 border border-gray-800 rounded-xl p-6 
@@ -25,11 +26,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand })
   return (
     <div
       className={containerClasses}
-      onClick={() => onToggleExpand(post.id)}
-      aria-expanded={isExpanded}
+      onClick={() => onToggleExpand(uniqueId)}
+      aria-expanded={!isExpanded}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggleExpand(post.id)}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggleExpand(uniqueId)}
     >
       <div className="flex justify-between items-start mb-3">
         <h2 className="text-xl font-bold text-gray-100 group-hover:text-white transition-colors duration-300">

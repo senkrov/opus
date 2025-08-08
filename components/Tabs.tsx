@@ -25,15 +25,23 @@ const Tabs: React.FC<TabsProps> = ({ activeFilter, onFilterChange }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    const activeTabIndex = TABS.findIndex((tab) => tab.key === activeFilter);
-    const activeTabNode = tabsRef.current[activeTabIndex];
+    const calculatePillStyle = () => {
+      const activeTabIndex = TABS.findIndex((tab) => tab.key === activeFilter);
+      const activeTabNode = tabsRef.current[activeTabIndex];
+      
+      if (activeTabNode) {
+        setPillStyle({
+          left: activeTabNode.offsetLeft,
+          width: activeTabNode.offsetWidth,
+        });
+      }
+    };
     
-    if (activeTabNode) {
-      setPillStyle({
-        left: activeTabNode.offsetLeft,
-        width: activeTabNode.offsetWidth,
-      });
-    }
+    calculatePillStyle();
+
+    // Recalculate when fonts are ready to fix initial render issue
+    document.fonts.ready.then(calculatePillStyle);
+
   }, [activeFilter]);
 
   return (
@@ -51,7 +59,7 @@ const Tabs: React.FC<TabsProps> = ({ activeFilter, onFilterChange }) => {
           key={tab.key}
           ref={(el) => { tabsRef.current[index] = el; }}
           onClick={() => onFilterChange(tab.key as Category | 'all')}
-          className={`relative z-10 font-mono text-sm rounded-full px-5 py-2 transition-colors duration-300 ease-in-out focus:outline-none 
+          className={`relative z-10 font-mono text-sm rounded-full px-5 py-2 transition-colors duration-300 ease-in-out focus:outline-none inline-flex items-center 
             ${
               activeFilter === tab.key
                 ? 'text-black font-medium'

@@ -1,6 +1,6 @@
 {
   "name": "opus",
-  "description": "An interactive personal portfolio website built with React and Tailwind CSS, showcasing projects that can be filtered by category.",
+  "description": "An interactive personal portfolio website built with React and Tailwind CSS, showcasing posts that can be filtered by category.",
   "requestFramePermissions": [],
   "prompt": ""
 }
