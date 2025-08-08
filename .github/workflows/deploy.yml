@@ -15,7 +15,6 @@ jobs:
       - run: npm install
       - run: npm run build
       - name: Deploy
-        run: |
-          echo "${{ secrets.DEPLOY_KEY }}" > deploy_key
-          chmod 600 deploy_key
-          rsync -avzr --delete -e "ssh -i deploy_key -o StrictHostKeyChecking=no" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_PATH }}
+        run: | echo "${{ secrets.DEPLOY_KEY }}" > deploy_key
+chmod 600 deploy_key
+rsync -avzr --delete -e "ssh -i deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_PATH }}
