@@ -1,9 +1,7 @@
 name: Deploy to VPS
-
 on:
   push:
     branches: [master]
-
 jobs:
   deploy:
     runs-on: self-hosted
@@ -16,6 +14,6 @@ jobs:
       - run: npm run build
       - name: Deploy
         run: |
-          echo -e "${{ secrets.DEPLOY_KEY }}" > deploy_key
-          chmod 600 deploy_key
-          rsync -avzr --delete -e "ssh -i deploy_key -o StrictHostKeyChecking=no" dist/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_PATH }}
+          cp -r dist/* /var/www/opus/
+          chown -R www-data:www-data /var/www/opus
+          systemctl restart nginx  # Optional: Restart if needed
