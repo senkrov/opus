@@ -42,8 +42,8 @@ const App: React.FC = () => {
   }, [activeFilter]);
 
   return (
-    <div className="bg-black min-h-screen text-gray-200">
-      <div className="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900/50 via-black to-black">
+    <div className="bg-[#0D1117] min-h-screen text-gray-200">
+      <div className="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900/50 via-[#0D1117] to-[#0D1117]">
         <div className={`will-animate ${isLoaded ? 'animate-in' : ''}`} style={{ animationDelay: '100ms' }}>
           <Header />
         </div>
