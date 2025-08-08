@@ -14,10 +14,10 @@ export const POSTS: Post[] = [
   {
     id: 0,
     title: 'experience 000',
-    short: 'experience synopsis',
+    short: 'experience desciptor',
     full: `full detailed report of the experience
 
-    you can also just use plain text next line to format by text blocks`,
+    you can also just use plain text next line to format by text blocks btw`,
     category: Category.Experience,
     tag: 'EXPERIENCE.000',
   },
