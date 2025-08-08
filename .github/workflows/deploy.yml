@@ -14,6 +14,5 @@ jobs:
       - run: npm run build
       - name: Deploy
         run: |
-          cp -r dist/* /var/www/opus/
-          chown -R www-data:www-data /var/www/opus
-          systemctl restart nginx  # Optional: Restart if needed
+          sudo cp -r dist/* /var/www/opus/
+          sudo chown -R www-data:www-data /var/www/opus
