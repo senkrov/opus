@@ -27,7 +27,7 @@ const App: React.FC = () => {
         <Header />
         <main className="flex flex-col items-center w-full px-4">
           <Tabs activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-          <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+          <div className="w-full max-w-5xl grid grid-cols-1 gap-6 pb-20">
             {filteredPosts.map((post) => {
               const uniqueId = `${post.category}-${post.id}`;
               return (

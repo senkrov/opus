@@ -1,3 +1,4 @@
+
 export enum Category {
   Effort = 'effort',
   Experience = 'experience',
@@ -6,8 +7,8 @@ export enum Category {
 export interface Post {
   id: number;
   title: string;
-  description: string;
-  fullContent: string;
+  short: string;
+  full: string;
   category: Category;
   tag: string;
 }

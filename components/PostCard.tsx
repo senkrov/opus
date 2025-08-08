@@ -20,14 +20,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand })
     bg-gray-900/30 border border-gray-800 rounded-xl p-6 
     transition-all duration-500 ease-in-out cursor-pointer group 
     ${styles.border} 
-    ${isExpanded ? 'md:col-span-2' : 'hover:bg-gray-900/80'}
+    ${isExpanded ? '' : 'hover:bg-gray-900/80'}
   `;
 
   return (
     <div
       className={containerClasses}
       onClick={() => onToggleExpand(uniqueId)}
-      aria-expanded={!isExpanded}
+      aria-expanded={isExpanded}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggleExpand(uniqueId)}
@@ -41,7 +41,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand })
         </span>
       </div>
       <p className="text-gray-400 leading-relaxed">
-        {post.description}
+        {post.short}
       </p>
 
       {/* Expanded Content Wrapper */}
@@ -63,7 +63,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand })
           onClick={(e) => e.stopPropagation()}
         >
           <p className="text-gray-300 whitespace-pre-line leading-relaxed">
-            {post.fullContent}
+            {post.full}
           </p>
         </div>
       </div>

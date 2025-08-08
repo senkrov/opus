@@ -1,10 +1,10 @@
 import React from 'react';
 import { Post, Category } from '../types';
 
-interface PostCardProps {
+interface ProjectCardProps {
   post: Post;
   isExpanded: boolean;
-  onToggleExpand: (id: number) => void;
+  onToggleExpand: (id: string) => void;
 }
 
 const categoryStyles: Record<Category, { bg: string; text: string; border: string }> = {
@@ -12,24 +12,25 @@ const categoryStyles: Record<Category, { bg: string; text: string; border: strin
   [Category.Experience]: { bg: 'bg-green-400/10', text: 'text-green-300', border: 'hover:border-green-500' },
 };
 
-const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ post, isExpanded, onToggleExpand }) => {
   const styles = categoryStyles[post.category];
+  const uniqueId = `${post.category}-${post.id}`;
 
   const containerClasses = `
     bg-gray-900/30 border border-gray-800 rounded-xl p-6 
     transition-all duration-500 ease-in-out cursor-pointer group 
     ${styles.border} 
-    ${isExpanded ? 'md:col-span-2' : 'hover:bg-gray-900/80'}
+    ${isExpanded ? '' : 'hover:bg-gray-900/80'}
   `;
 
   return (
     <div
       className={containerClasses}
-      onClick={() => onToggleExpand(post.id)}
+      onClick={() => onToggleExpand(uniqueId)}
       aria-expanded={isExpanded}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggleExpand(post.id)}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggleExpand(uniqueId)}
     >
       <div className="flex justify-between items-start mb-3">
         <h2 className="text-xl font-bold text-gray-100 group-hover:text-white transition-colors duration-300">
@@ -40,7 +41,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand })
         </span>
       </div>
       <p className="text-gray-400 leading-relaxed">
-        {post.description}
+        {post.short}
       </p>
 
       {/* Expanded Content Wrapper */}
@@ -62,7 +63,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand })
           onClick={(e) => e.stopPropagation()}
         >
           <p className="text-gray-300 whitespace-pre-line leading-relaxed">
-            {post.fullContent}
+            {post.full}
           </p>
         </div>
       </div>
@@ -70,4 +71,4 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand })
   );
 };
 
-export default PostCard;
+export default ProjectCard;
