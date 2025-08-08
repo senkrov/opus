@@ -14,5 +14,5 @@ jobs:
       - run: npm run build
       - name: Deploy
         run: |
-          sudo cp -rv dist/* /var/www/opus/
+          sudo cp -rv dist/* /var/www/opus/dist/
           sudo chown -R www-data:www-data /var/www/opus
