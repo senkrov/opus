@@ -7,7 +7,7 @@ export const POSTS: Post[] = [
     short: 'all the cool kids have personal websites, I wanted one too',
     full: `started conceptualizing with replit, used screenshots to remake the app based on represented styles and additionally developed prompts in Google's AI Studio using Gemini 2.5 Pro
 
-    I also employed the help of Grok 4 for managing my server while deploying multiple services which pleasantly resulted in it teaching me about GitHub's actions workflow helper`,
+    for managing my server while deploying multiple services I also employed the help of Grok 4 which pleasantly resulted in it teaching me about GitHub's actions workflow helper`,
     category: Category.Effort,
     tag: 'EFFORT.000',
   },
