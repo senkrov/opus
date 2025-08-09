@@ -2,7 +2,7 @@ import { Category, Post } from './types';
 
 export const POSTS: Post[] = [
   {
-    id: 1,
+    id: 0,
     title: 'PROJECT OPUS',
     short: 'all the cool kids have personal websites, I wanted one too',
     full: `I started this project to create a personal website, drawing inspiration from various designs and leveraging AI to accelerate development.
@@ -18,7 +18,7 @@ My process involved:
     date: 'AUGUST 8 2025',
   },
   {
-    id: 2,
+    id: 0,
     title: 'experience 000',
     short: 'experience descriptor',
     full: `full detailed report of the experience

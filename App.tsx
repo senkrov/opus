@@ -1,23 +1,19 @@
-
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import Tabs from './components/Tabs';
 import PostCard from './components/PostCard';
+import CommandPalette from './components/CommandPalette';
 import { Category, Post } from './types';
 import { POSTS } from './constants';
-import { useDebounce } from './hooks/useDebounce';
 
 const App: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<Category | 'all'>('all');
-  const [expandedPostId, setExpandedPostId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Post[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [searchTrigger, setSearchTrigger] = useState<{ postId: string; query: string } | null>(null);
 
   useEffect(() => {
     // Trigger load-in animation
@@ -25,51 +21,55 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
   
+  // Command Palette keyboard shortcut
   useEffect(() => {
-    const performSearch = async () => {
-      if (debouncedSearchQuery.trim() === '') {
-        setSearchResults([]);
-        setIsSearching(false);
-        return;
-      }
-
-      setIsSearching(true);
-      try {
-        // Use the global config for the API base URL
-        const baseUrl = window.APP_CONFIG?.API_BASE_URL || '';
-        const response = await fetch(`${baseUrl}/api/search?q=${encodeURIComponent(debouncedSearchQuery)}`);
-        if (!response.ok) {
-          throw new Error('Search request failed');
-        }
-        const data: Post[] = await response.json();
-        setSearchResults(data);
-      } catch (error) {
-        console.error("Error fetching search results:", error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsPaletteOpen(prev => !prev);
       }
     };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
-    performSearch();
-  }, [debouncedSearchQuery]);
-
-  const handleCardClick = (postId: number) => {
+  const handleCardClick = (postId: string) => {
     setExpandedPostId(currentId => (currentId === postId ? null : postId));
   };
 
-  const handleFilterChange = (filter: Category | 'all') => {
+  const handleFilterChange = useCallback((filter: Category | 'all') => {
     if (filter === activeFilter) return;
     
     setIsTransitioning(true);
     setExpandedPostId(null);
-    setSearchQuery(''); // Clear search when changing filters
     
     setTimeout(() => {
       setActiveFilter(filter);
       setIsTransitioning(false);
     }, 100);
-  };
+  }, [activeFilter]);
+  
+  const handlePostSelect = useCallback((post: Post, query: string) => {
+    const uniqueId = `${post.category}-${post.id}`;
+    
+    setSearchQuery(query);
+    setSearchTrigger({ postId: uniqueId, query });
+    setIsPaletteOpen(false);
+
+    // Ensure the post is visible by setting the correct filter
+    if (post.category !== activeFilter && activeFilter !== 'all') {
+      handleFilterChange(post.category);
+    }
+
+    // Give time for filter transition if any
+    setTimeout(() => {
+        const element = document.getElementById(uniqueId);
+        if (element) {
+          // Scrolling is now handled by the animation effect in PostCard
+          setExpandedPostId(uniqueId);
+        }
+    }, 150);
+  }, [activeFilter, handleFilterChange]);
 
   const filteredPosts = useMemo(() => {
     if (activeFilter === 'all') {
@@ -77,45 +77,46 @@ const App: React.FC = () => {
     }
     return POSTS.filter((p) => p.category === activeFilter);
   }, [activeFilter]);
-  
-  const postsToDisplay = searchQuery.trim() ? searchResults : filteredPosts;
-
-  const renderPost = (post: Post, index: number) => {
-    const isExpanded = expandedPostId === post.id;
-    const isAnyPostExpanded = !!expandedPostId;
-    
-    return (
-      <div key={post.id} className={`will-animate ${isLoaded && !searchQuery ? 'animate-in' : ''}`} style={{ animationDelay: `${300 + index * 75}ms` }}>
-        <PostCard
-          post={post}
-          isExpanded={isExpanded}
-          onToggleExpand={handleCardClick}
-          isAnyPostExpanded={isAnyPostExpanded}
-        />
-      </div>
-    );
-  };
 
   return (
     <div className="bg-[#0D1117] min-h-screen text-gray-200">
       <div className="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900/50 via-[#0D1117] to-[#0D1117]">
         <div className={`will-animate ${isLoaded ? 'animate-in' : ''}`} style={{ animationDelay: '100ms' }}>
-          <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <Header
+            onSearchClick={() => setIsPaletteOpen(true)}
+            activeFilter={activeFilter}
+            onFilterChange={handleFilterChange}
+          />
         </div>
         <main className="flex flex-col items-center w-full px-4">
-          <div className={`will-animate ${isLoaded ? 'animate-in' : ''}`} style={{ animationDelay: '200ms' }}>
-            <Tabs activeFilter={activeFilter} onFilterChange={handleFilterChange} />
-          </div>
-
-          <div className={`w-full max-w-5xl pb-20 transition-opacity duration-100 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-            {isSearching ? (
-              <div className="text-center text-gray-400">Searching...</div>
-            ) : searchQuery && !postsToDisplay.length ? (
-              <div className="text-center text-gray-400">No results found for "{searchQuery}"</div>
+          <div className={`w-full max-w-5xl grid grid-cols-1 gap-6 pt-8 pb-20 transition-opacity duration-100 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+            {filteredPosts.length > 0 ? (
+                filteredPosts.map((post, index) => {
+                  const uniqueId = `${post.category}-${post.id}`;
+                  const isExpanded = expandedPostId === uniqueId;
+                  const isAnyPostExpanded = !!expandedPostId;
+                  
+                  return (
+                    <div id={uniqueId} key={uniqueId} className={`will-animate ${isLoaded ? 'animate-in' : ''}`} style={{ animationDelay: `${300 + index * 50}ms`, scrollMarginTop: '8rem' }}>
+                      <PostCard
+                        post={post}
+                        isExpanded={isExpanded}
+                        onToggleExpand={() => handleCardClick(uniqueId)}
+                        isAnyPostExpanded={isAnyPostExpanded}
+                        highlightQuery={searchQuery}
+                        searchTrigger={searchTrigger}
+                        onAnimationComplete={() => setSearchTrigger(null)}
+                      />
+                    </div>
+                  );
+                })
             ) : (
-              <div className="grid grid-cols-1 gap-6">
-                {postsToDisplay.map(renderPost)}
-              </div>
+                <div 
+                  className="text-center py-16 text-gray-500 font-mono will-animate animate-in" 
+                  style={{ animationDelay: '300ms' }}
+                >
+                    [NO MATCHING POSTS FOUND]
+                </div>
             )}
           </div>
         </main>
@@ -123,6 +124,14 @@ const App: React.FC = () => {
           <Footer />
         </div>
       </div>
+      <CommandPalette 
+        isOpen={isPaletteOpen}
+        onClose={() => setIsPaletteOpen(false)}
+        posts={POSTS}
+        onFilterChange={handleFilterChange}
+        onPostSelect={handlePostSelect}
+        onSearchChange={setSearchQuery}
+      />
     </div>
   );
 };

@@ -35,6 +35,23 @@
       .will-animate {
         opacity: 0;
       }
+
+      .highlight-mark.flash-animation {
+        animation: flash-blue 1.5s ease-out;
+      }
+
+      @keyframes flash-blue {
+        0%, 100% {
+          background-color: rgba(250, 204, 21, 0.3); /* bg-yellow-500/30 */
+          box-shadow: none;
+          color: #fde68a; /* text-yellow-200 */
+        }
+        50% {
+          background-color: rgba(59, 130, 246, 0.7); /* flash blue-500/70 */
+          box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+          color: #eff6ff; /* lighter text e.g. blue-50 */
+        }
+      }
     </style>
   <script type="importmap">
 {
@@ -52,7 +69,6 @@
 </head>
   <body>
     <div id="root"></div>
-    <script src="/config.js"></script>
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>

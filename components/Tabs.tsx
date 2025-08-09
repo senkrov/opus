@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import { Category } from '../types';
 import { TABS } from '../constants';
@@ -7,69 +8,59 @@ interface TabsProps {
   onFilterChange: (filter: Category | 'all') => void;
 }
 
-const pillColorClasses: Record<Category | 'all', string> = {
-  all: 'bg-white',
-  [Category.Effort]: 'bg-blue-500',
-  [Category.Experience]: 'bg-green-500',
-};
-
-const hoverTextClasses: Record<Category | 'all', string> = {
-    all: 'hover:text-white',
-    [Category.Effort]: 'hover:text-blue-400',
-    [Category.Experience]: 'hover:text-green-400',
-}
-
 const Tabs: React.FC<TabsProps> = ({ activeFilter, onFilterChange }) => {
-  const [pillStyle, setPillStyle] = useState<React.CSSProperties>({});
+  const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    const calculatePillStyle = () => {
+    const calculateIndicatorStyle = () => {
       const activeTabIndex = TABS.findIndex((tab) => tab.key === activeFilter);
       const activeTabNode = tabsRef.current[activeTabIndex];
       
       if (activeTabNode) {
-        setPillStyle({
+        setIndicatorStyle({
           left: activeTabNode.offsetLeft,
           width: activeTabNode.offsetWidth,
         });
       }
     };
     
-    calculatePillStyle();
+    calculateIndicatorStyle();
+    window.addEventListener('resize', calculateIndicatorStyle);
 
-    // Recalculate when fonts are ready to fix initial render issue
-    document.fonts.ready.then(calculatePillStyle);
+    document.fonts.ready.then(calculateIndicatorStyle);
+
+    return () => window.removeEventListener('resize', calculateIndicatorStyle);
 
   }, [activeFilter]);
 
   return (
     <nav 
       ref={containerRef}
-      className="relative flex items-center gap-1 mb-8 bg-gray-900/50 border border-gray-700/50 rounded-full p-1.5 backdrop-blur-sm"
+      className="relative flex items-center gap-2 sm:gap-6"
     >
-      <div
-        className={`absolute top-1.5 bottom-1.5 rounded-full shadow-lg transition-all duration-300 ease-in-out ${pillColorClasses[activeFilter]}`}
-        style={pillStyle}
-      ></div>
-
       {TABS.map((tab, index) => (
         <button
           key={tab.key}
           ref={(el) => { tabsRef.current[index] = el; }}
           onClick={() => onFilterChange(tab.key as Category | 'all')}
-          className={`relative z-10 font-mono text-sm rounded-full px-5 py-2 transition-colors duration-300 ease-in-out focus:outline-none inline-flex items-center 
+          className={`font-mono text-xs sm:text-sm py-3 whitespace-nowrap transition-colors duration-300 ease-in-out focus:outline-none focus-visible:text-gray-100
             ${
               activeFilter === tab.key
-                ? 'text-black font-medium'
-                : `text-gray-400 ${hoverTextClasses[tab.key]}`
+                ? 'text-gray-100'
+                : 'text-gray-500 hover:text-gray-300'
             }
           `}
+          aria-pressed={activeFilter === tab.key}
         >
           {tab.label}
         </button>
       ))}
+       <div
+        className="absolute bottom-[-1px] h-[2px] bg-blue-500 rounded-full transition-all duration-300 ease-in-out"
+        style={indicatorStyle}
+      ></div>
     </nav>
   );
 };
