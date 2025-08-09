@@ -4,7 +4,7 @@ import { Post, Category } from '../types';
 interface PostCardProps {
   post: Post;
   isExpanded: boolean;
-  onToggleExpand: (id: string) => void;
+  onToggleExpand: (id: number) => void;
   isAnyPostExpanded: boolean;
 }
 
@@ -27,7 +27,6 @@ const categoryStyles: Record<Category, { bg: string; text: string; border: strin
 
 const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, isAnyPostExpanded }) => {
   const styles = categoryStyles[post.category];
-  const uniqueId = `${post.category}-${post.id}`;
   const isDimmed = isAnyPostExpanded && !isExpanded;
 
   const containerClasses = `
@@ -42,11 +41,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, i
   return (
     <div
       className={containerClasses}
-      onClick={() => onToggleExpand(uniqueId)}
+      onClick={() => onToggleExpand(post.id)}
       aria-expanded={isExpanded}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggleExpand(uniqueId)}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggleExpand(post.id)}
     >
       <div className="flex justify-between items-start mb-3">
         <h2 className="text-xl font-bold text-gray-100 group-hover:text-white transition-colors duration-300">
@@ -81,9 +80,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, i
             <span className="font-mono text-xs text-gray-500 flex-shrink-0">{post.date}</span>
           </div>
           
-          <p className="text-gray-300 whitespace-pre-line leading-relaxed">
-            {post.full}
-          </p>
+          <div 
+            className="text-gray-300 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: post.full.replace(/\n/g, '<br />') }}
+          />
         </div>
       </div>
     </div>

@@ -2,20 +2,25 @@ import { Category, Post } from './types';
 
 export const POSTS: Post[] = [
   {
-    id: 0,
+    id: 1,
     title: 'PROJECT OPUS',
     short: 'all the cool kids have personal websites, I wanted one too',
-    full: `started conceptualizing with replit, used screenshots to remake the app based on represented styles and additionally developed prompts in Google's AI Studio using Gemini 2.5 Pro
+    full: `I started this project to create a personal website, drawing inspiration from various designs and leveraging AI to accelerate development.
 
-    for managing my server while deploying multiple services I also employed the help of Grok 4 which pleasantly resulted in it teaching me about GitHub's actions workflow helper`,
+My process involved:
+<ul class="mt-2">
+  <li class="flex items-start"><span class="text-blue-400 font-bold mr-4 shrink-0">–</span><span>Conceptualizing and prototyping initial layouts using Replit.</span></li>
+  <li class="flex items-start"><span class="text-blue-400 font-bold mr-4 shrink-0">–</span><span>Developing component logic and structure with prompts for Google's Gemini 2.5 Pro.</span></li>
+  <li class="flex items-start"><span class="text-blue-400 font-bold mr-4 shrink-0">–</span><span>Utilizing Grok 4 to learn and implement a GitHub Actions workflow for deployment.</span></li>
+</ul>`,
     category: Category.Effort,
     tag: 'EFFORT.000',
-    date: 'MAY 20 2024',
+    date: 'AUGUST 8 2025',
   },
   {
-    id: 0,
+    id: 2,
     title: 'experience 000',
-    short: 'experience desciptor',
+    short: 'experience descriptor',
     full: `full detailed report of the experience
 
     you can also just use plain text next line to format by text blocks btw
