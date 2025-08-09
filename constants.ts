@@ -10,7 +10,7 @@ export const POSTS: Post[] = [
     for managing my server while deploying multiple services I also employed the help of Grok 4 which pleasantly resulted in it teaching me about GitHub's actions workflow helper`,
     category: Category.Effort,
     tag: 'EFFORT.000',
-    date: 'MAY 2024',
+    date: 'MAY 20 2024',
   },
   {
     id: 0,
@@ -27,7 +27,7 @@ export const POSTS: Post[] = [
     - nev`,
     category: Category.Experience,
     tag: 'EXPERIENCE.000',
-    date: 'APR 2024',
+    date: 'APRIL 15 2024',
   },
 ];
 

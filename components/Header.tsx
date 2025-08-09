@@ -3,7 +3,7 @@ import React from 'react';
 const Header: React.FC = () => {
   return (
     <header className="flex items-center w-full max-w-5xl mx-auto px-4 py-5 text-gray-400">
-      <span className="font-bold text-lg text-white">nev senkrov</span>
+      <span className="font-medium text-lg text-gray-400">nev senkrov</span>
       <a 
         href="https://x.com/senkrov" 
         target="_blank" 
