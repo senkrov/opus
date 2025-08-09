@@ -80,7 +80,7 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-[#0D1117] min-h-screen text-gray-200">
-      <div className="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900/50 via-[#0D1117] to-[#0D1117]">
+      <div className="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900/50 via-[#0D1117] to-[#0D1117] flex flex-col min-h-screen">
         <div className={`will-animate ${isLoaded ? 'animate-in' : ''}`} style={{ animationDelay: '100ms' }}>
           <Header
             onSearchClick={() => setIsPaletteOpen(true)}
@@ -88,7 +88,7 @@ const App: React.FC = () => {
             onFilterChange={handleFilterChange}
           />
         </div>
-        <main className="flex flex-col items-center w-full px-4">
+        <main className="flex flex-col items-center w-full px-4 flex-grow">
           <div className={`w-full max-w-5xl grid grid-cols-1 gap-6 pt-8 pb-20 transition-opacity duration-100 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             {filteredPosts.length > 0 ? (
                 filteredPosts.map((post, index) => {
@@ -120,9 +120,7 @@ const App: React.FC = () => {
             )}
           </div>
         </main>
-        <div className={`will-animate ${isLoaded ? 'animate-in' : ''}`} style={{ animationDelay: '500ms' }}>
-          <Footer />
-        </div>
+        <Footer />
       </div>
       <CommandPalette 
         isOpen={isPaletteOpen}

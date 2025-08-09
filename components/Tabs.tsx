@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import { Category } from '../types';
 import { TABS } from '../constants';
@@ -35,6 +34,20 @@ const Tabs: React.FC<TabsProps> = ({ activeFilter, onFilterChange }) => {
 
   }, [activeFilter]);
 
+  const getIndicatorColorClass = (filter: Category | 'all'): string => {
+    switch (filter) {
+      case Category.Effort:
+        return 'bg-blue-400';
+      case Category.Experience:
+        return 'bg-green-400';
+      case 'all':
+      default:
+        return 'bg-gray-200';
+    }
+  };
+
+  const indicatorColorClass = getIndicatorColorClass(activeFilter);
+
   return (
     <nav 
       ref={containerRef}
@@ -58,7 +71,7 @@ const Tabs: React.FC<TabsProps> = ({ activeFilter, onFilterChange }) => {
         </button>
       ))}
        <div
-        className="absolute bottom-[-1px] h-[2px] bg-blue-500 rounded-full transition-all duration-300 ease-in-out"
+        className={`absolute bottom-[-1px] h-[2px] rounded-full transition-all duration-300 ease-in-out ${indicatorColorClass}`}
         style={indicatorStyle}
       ></div>
     </nav>
