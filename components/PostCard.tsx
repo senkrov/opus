@@ -1,4 +1,8 @@
-import React, { useLayoutEffect, useRef } from 'react';
+/**
+ * @file A component that displays a single post. It handles its own expansion/collapse animation,
+ * a mouse-tracking spotlight effect, and the animation for highlighting search results within its content.
+ */
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Post, Category } from '../types';
 import Highlight from './Highlight';
 
@@ -7,12 +11,12 @@ interface PostCardProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   isAnyPostExpanded: boolean;
-  highlightQuery?: string;
+  highlightQuery: string;
   searchTrigger: { postId: string; query: string } | null;
   onAnimationComplete: () => void;
 }
 
-const categoryStyles: Record<Category, { bg: string; text: string; border: string; glowHover: string; glowExpanded: string; spotlightColor: string; }> = {
+const categoryStyles: Record<Category, { bg: string; text: string; border: string; glowHover: string; glowExpanded: string; spotlightColor: string; markerBg: string; }> = {
   [Category.Effort]: { 
     bg: 'bg-blue-400/10', 
     text: 'text-blue-300', 
@@ -20,6 +24,7 @@ const categoryStyles: Record<Category, { bg: string; text: string; border: strin
     glowHover: 'group-hover:shadow-[0_0_20px_0_rgba(59,130,246,0.3)]',
     glowExpanded: 'shadow-[0_0_30px_-5px_rgba(59,130,246,0.4)]',
     spotlightColor: 'rgba(59, 130, 246, 0.08)',
+    markerBg: 'bg-blue-400/20',
   },
   [Category.Experience]: { 
     bg: 'bg-green-400/10', 
@@ -28,79 +33,107 @@ const categoryStyles: Record<Category, { bg: string; text: string; border: strin
     glowHover: 'group-hover:shadow-[0_0_20px_0_rgba(74,222,128,0.3)]',
     glowExpanded: 'shadow-[0_0_30px_-5px_rgba(74,222,128,0.4)]',
     spotlightColor: 'rgba(74, 222, 128, 0.08)',
+    markerBg: 'bg-green-400/20',
   },
-};
-
-const createHighlightedHtml = (html: string, highlight: string): string => {
-    if (!highlight.trim()) return html.replace(/\n/g, '<br />');
-
-    const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const safeHighlight = escapeRegExp(highlight.trim());
-    const regex = new RegExp(`(${safeHighlight})`, 'gi');
-
-    const finalHtml = html.replace(/\n/g, '<br />');
-    // Split by HTML tags to only replace text content, not attributes or tags themselves
-    const segments = finalHtml.split(/(<[^>]*>)/g);
-
-    for (let i = 0; i < segments.length; i++) {
-        // Only process segments that are not HTML tags (they are at even indices)
-        if (i % 2 === 0) {
-            segments[i] = segments[i].replace(
-                regex,
-                `<mark class="highlight-mark bg-yellow-500/30 text-yellow-200 rounded-sm px-0.5">$1</mark>`
-            );
-        }
-    }
-    return segments.join('');
 };
 
 const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, isAnyPostExpanded, highlightQuery, searchTrigger, onAnimationComplete }) => {
   const styles = categoryStyles[post.category];
   const isDimmed = isAnyPostExpanded && !isExpanded;
   const cardRef = useRef<HTMLDivElement>(null);
-  const animationTimerRef = useRef<number | null>(null);
-  const [spotlightStyle, setSpotlightStyle] = React.useState<React.CSSProperties>({ opacity: 0 });
+  const expandedContentRef = useRef<HTMLDivElement>(null);
+  const animationCleanupTimer = useRef<number | null>(null);
+  const [spotlightStyle, setSpotlightStyle] = useState<React.CSSProperties>({ opacity: 0 });
 
   const uniqueId = `${post.category}-${post.id}`;
 
+  /**
+   * Renders the 'full' post content, parsing a custom format for styled list items.
+   * Format: `[T] Title: Description`
+   * [T] -> Marker
+   * Title -> Strong text
+   * Description -> Regular text
+   */
+  const renderFullText = (text: string, query?: string) => {
+    if (!text) return null;
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    const listRegex = /^\[(.+?)\]\s*(.*?):\s*(.*)/;
+
+    return lines.map((line, index) => {
+      const match = line.match(listRegex);
+
+      if (match) {
+        const [, marker, title, description] = match;
+        return (
+          <div key={index} className="flex items-start gap-4 my-4 last:mb-0 first:mt-0">
+            <span className={`flex-shrink-0 ${styles.markerBg} ${styles.text} font-bold font-mono text-xs rounded-md h-6 w-6 flex items-center justify-center mt-1`}>
+              {marker}
+            </span>
+            <div className="flex-grow">
+              <strong className="block text-gray-200">
+                <Highlight text={title} highlight={query} />
+              </strong>
+              <p className="text-gray-400 mt-1">
+                <Highlight text={description} highlight={query} />
+              </p>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <p key={index} className="my-4 last:mb-0 first:mt-0">
+          <Highlight text={line} highlight={query} />
+        </p>
+      );
+    });
+  };
+  
+  // This effect manages the "flash" animation on highlighted search terms.
   useLayoutEffect(() => {
-    // Animate highlight if this card is the target and has just expanded
-    if (isExpanded && cardRef.current && searchTrigger?.postId === uniqueId) {
-        // The expanded content has a 300ms fade-in delay. We must wait for it to become
-        // visible before we can trigger the animation on its children.
-        animationTimerRef.current = window.setTimeout(() => {
-            if (!cardRef.current) return; // Guard against component unmounting
+    // Shared cleanup logic to cancel any pending animation timeouts.
+    const cleanupAnimation = () => {
+      if (animationCleanupTimer.current) {
+        clearTimeout(animationCleanupTimer.current);
+      }
+    };
 
-            const highlights = Array.from(cardRef.current.querySelectorAll('.highlight-mark'));
-            
-            if (highlights.length > 0) {
-                const firstHighlight = highlights[0] as HTMLElement;
-
-                // Scroll to the first match
-                firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                // Apply animation class to all matches
-                highlights.forEach(h => h.classList.add('flash-animation'));
-
-                // Set a timer to remove the class and signal completion
-                animationTimerRef.current = window.setTimeout(() => {
-                    highlights.forEach(h => h.classList.remove('flash-animation'));
-                    onAnimationComplete();
-                }, 1500); // Must be same duration as animation
-
-            } else {
-                // If no highlights are found, complete the trigger immediately
-                onAnimationComplete();
-            }
-        }, 350); // A bit longer than the 300ms CSS transition delay
+    // Only proceed if this card is the target of a search and is currently expanded.
+    if (!isExpanded || !searchTrigger || searchTrigger.postId !== uniqueId) {
+      cleanupAnimation();
+      return;
     }
+
+    const contentElement = expandedContentRef.current;
+    if (!contentElement) return;
+
+    // This function will be called when the expanded content's fade-in transition finishes.
+    const onContentVisible = () => {
+      if (!cardRef.current) return;
+
+      const highlights = Array.from(cardRef.current.querySelectorAll('.highlight-mark'));
+      
+      if (highlights.length > 0) {
+        (highlights[0] as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        highlights.forEach(h => h.classList.add('flash-animation'));
+        
+        // After the flash animation completes, remove the class and notify the parent component.
+        animationCleanupTimer.current = window.setTimeout(() => {
+          highlights.forEach(h => h.classList.remove('flash-animation'));
+          onAnimationComplete();
+        }, 1500); // Duration must match the keyframe animation.
+      } else {
+        onAnimationComplete(); // No matches found, so we're done.
+      }
+    };
     
-    // Cleanup function runs when component unmounts or deps change.
-    // This will clear any pending animation triggers.
+    // We listen for the 'transitionend' event to reliably trigger the highlight animation
+    // *after* the content has faded in, which is more robust than a fixed setTimeout.
+    contentElement.addEventListener('transitionend', onContentVisible, { once: true });
+
     return () => {
-        if (animationTimerRef.current) {
-            clearTimeout(animationTimerRef.current);
-        }
+      cleanupAnimation();
+      contentElement.removeEventListener('transitionend', onContentVisible);
     };
   }, [isExpanded, searchTrigger, uniqueId, onAnimationComplete]);
 
@@ -133,7 +166,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, i
     <div
       ref={cardRef}
       className={containerClasses}
-      onClick={onToggleExpand}
+      onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       aria-expanded={isExpanded}
@@ -167,6 +200,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, i
           aria-hidden={!isExpanded}
         >
           <div
+            ref={expandedContentRef}
             className={`
               transition-opacity duration-300 ease-in-out
               ${isExpanded ? 'opacity-100 delay-300' : 'opacity-0'}
@@ -177,10 +211,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, i
               <span className="font-mono text-xs text-gray-500 flex-shrink-0">{post.date}</span>
             </div>
             
-            <div 
-              className="text-gray-300 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: createHighlightedHtml(post.full, highlightQuery || '') }}
-            />
+            <div className="text-gray-300 leading-relaxed">
+                {renderFullText(post.full, highlightQuery)}
+            </div>
           </div>
         </div>
       </div>

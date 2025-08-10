@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>nev senkrov</title>
+    <meta name="description" content="An interactive personal portfolio website built with React and Tailwind CSS, showcasing posts that can be filtered by category." />
+    <title>nev senkrov | Portfolio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,6 +18,9 @@
         background-color: #0D1117;
       }
 
+      /*
+       * Fade-in and slide-up animation for initial page load.
+       */
       @keyframes fadeInUp {
         from {
           opacity: 0;
@@ -32,10 +36,16 @@
         animation: fadeInUp 0.5s ease-out forwards;
       }
 
+      /*
+       * Helper class to set initial state for elements that will be animated in.
+       */
       .will-animate {
         opacity: 0;
       }
 
+      /*
+       * Animation for flashing highlighted search terms.
+       */
       .highlight-mark.flash-animation {
         animation: flash-blue 1.5s ease-out;
       }
@@ -47,7 +57,7 @@
           color: #fde68a; /* text-yellow-200 */
         }
         50% {
-          background-color: rgba(59, 130, 246, 0.7); /* flash blue-500/70 */
+          background-color: rgba(59, 130, 246, 0.7); /* flash with blue-500/70 */
           box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
           color: #eff6ff; /* lighter text e.g. blue-50 */
         }
@@ -59,9 +69,7 @@
     "react/": "https://esm.sh/react@^19.1.1/",
     "react": "https://esm.sh/react@^19.1.1",
     "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
-    "vite": "https://esm.sh/vite@^7.1.0",
-    "path": "https://esm.sh/path@^0.12.7",
-    "url": "https://esm.sh/url@^0.11.4"
+    "vite": "https://esm.sh/vite@^7.1.1"
   }
 }
 </script>

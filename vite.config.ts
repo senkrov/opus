@@ -1,5 +1,4 @@
 
-import { fileURLToPath, URL } from 'url';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
@@ -7,11 +6,6 @@ export default defineConfig(({ mode }) => {
     return {
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
-      resolve: {
-        alias: {
-          '@': fileURLToPath(new URL('.', import.meta.url))
-        }
       }
     };
 });
