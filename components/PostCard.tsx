@@ -2,7 +2,7 @@
  * @file A component that displays a single post. It handles its own expansion/collapse animation,
  * a mouse-tracking spotlight effect, and the animation for highlighting search results within its content.
  */
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState, useMemo } from 'react';
 import { Post, Category } from '../types';
 import Highlight from './Highlight';
 
@@ -37,7 +37,7 @@ const categoryStyles: Record<Category, { bg: string; text: string; border: strin
   },
 };
 
-const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, isAnyPostExpanded, highlightQuery, searchTrigger, onAnimationComplete }) => {
+const PostCard: React.FC<PostCardProps> = React.memo(({ post, isExpanded, onToggleExpand, isAnyPostExpanded, highlightQuery, searchTrigger, onAnimationComplete }) => {
   const styles = categoryStyles[post.category];
   const isDimmed = isAnyPostExpanded && !isExpanded;
   const cardRef = useRef<HTMLDivElement>(null);
@@ -54,27 +54,117 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, i
    * Title -> Strong text
    * Description -> Regular text
    */
-  const renderFullText = (text: string, query?: string) => {
+  const renderedFullText = useMemo(() => {
+    const text = post.full;
     if (!text) return null;
     const lines = text.split('\n').filter(line => line.trim() !== '');
     const listRegex = /^\[(.+?)\]\s*(.*?):\s*(.*)/;
 
-    return lines.map((line, index) => {
+    // Collect all parsed items first to handle grid layout grouping
+    const items = lines.map((line) => {
       const match = line.match(listRegex);
-
       if (match) {
-        const [, marker, title, description] = match;
-        return (
-          <div key={index} className="flex items-start gap-4 my-4 last:mb-0 first:mt-0">
-            <span className={`flex-shrink-0 ${styles.markerBg} ${styles.text} font-bold font-mono text-xs rounded-md h-6 w-6 flex items-center justify-center mt-1`}>
-              {marker}
-            </span>
-            <div className="flex-grow">
-              <strong className="block text-gray-200">
-                <Highlight text={title} highlight={query} />
+        return { type: 'item', marker: match[1], title: match[2], description: match[3], original: line };
+      }
+      return { type: 'text', content: line };
+    });
+
+    if (post.layoutType === 'grid') {
+      const gridItems: React.ReactNode[] = [];
+      const textItems: React.ReactNode[] = [];
+      
+      items.forEach((item, index) => {
+        if (item.type === 'item') {
+           gridItems.push(
+            <div key={`grid-${index}`} className={`p-3 rounded-lg border ${styles.bg} ${styles.border} border-opacity-20`}>
+              <strong className={`block ${styles.text} text-sm mb-1`}>
+                <Highlight text={item.title} highlight={highlightQuery} />
               </strong>
-              <p className="text-gray-400 mt-1">
-                <Highlight text={description} highlight={query} />
+              <p className="text-gray-400 text-xs leading-relaxed">
+                <Highlight text={item.description} highlight={highlightQuery} />
+              </p>
+            </div>
+           );
+        } else {
+           // If we have mixed content, push text as a full-width element, but for now just appending
+           textItems.push(
+            <p key={`text-${index}`} className="my-4 col-span-2">
+              <Highlight text={item.content} highlight={highlightQuery} />
+            </p>
+           );
+        }
+      });
+
+      return (
+        <div>
+           {textItems}
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+             {gridItems}
+           </div>
+        </div>
+      );
+    }
+
+    return items.map((item, index) => {
+      if (item.type === 'item') {
+        if (post.layoutType === 'compact') {
+           return (
+            <div key={index} className="flex items-start gap-3 my-2">
+               <div className={`flex-shrink-0 mt-2 w-1.5 h-1.5 rounded-full ${styles.bg.replace('/10', '')} ${styles.text}`}></div>
+               <div className="text-gray-300">
+                 <strong className="text-gray-200 mr-2">
+                   <Highlight text={item.title} highlight={highlightQuery} />:
+                 </strong>
+                 <span className="text-gray-400">
+                   <Highlight text={item.description} highlight={highlightQuery} />
+                 </span>
+               </div>
+            </div>
+           );
+        }
+        
+        if (post.layoutType === 'classic') {
+           return (
+            <div key={index} className="my-5 first:mt-2 last:mb-0">
+               <strong className="block text-gray-100 text-base font-bold mb-2">
+                 <Highlight text={item.title} highlight={highlightQuery} />
+               </strong>
+               <p className="text-gray-300 leading-relaxed text-sm">
+                 <Highlight text={item.description} highlight={highlightQuery} />
+               </p>
+            </div>
+           );
+        }
+
+        if (post.layoutType === 'prominent') {
+           return (
+            <div key={index} className="my-6 first:mt-2 last:mb-0">
+               <strong className={`block ${styles.text} text-lg font-bold mb-2`}>
+                 <Highlight text={item.title} highlight={highlightQuery} />
+               </strong>
+               <div className="pl-4 border-l-2 border-gray-700/30">
+                 <p className="text-gray-300 leading-relaxed">
+                   <Highlight text={item.description} highlight={highlightQuery} />
+                 </p>
+               </div>
+            </div>
+           );
+        }
+        
+        // Default Layout (with deeper indentation)
+        return (
+          <div key={index} className="flex items-start gap-3 my-4 last:mb-0 first:mt-0">
+            <div className={`flex-shrink-0 mt-1.5 ${styles.text}`}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </div>
+            <div className="flex-grow">
+              <strong className="block text-gray-200 text-base">
+                <Highlight text={item.title} highlight={highlightQuery} />
+              </strong>
+              <p className="text-gray-400 mt-1 ml-1 pl-3 border-l-2 border-gray-700/50">
+                <Highlight text={item.description} highlight={highlightQuery} />
               </p>
             </div>
           </div>
@@ -83,11 +173,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, i
 
       return (
         <p key={index} className="my-4 last:mb-0 first:mt-0">
-          <Highlight text={line} highlight={query} />
+          <Highlight text={item.content} highlight={highlightQuery} />
         </p>
       );
     });
-  };
+  }, [post.full, post.layoutType, highlightQuery, styles]);
   
   // This effect manages the "flash" animation on highlighted search terms.
   useLayoutEffect(() => {
@@ -181,16 +271,19 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, i
       
       <div className="relative z-10">
         <div className="flex justify-between items-start mb-3">
-          <h2 className="text-lg md:text-xl font-bold text-gray-100 group-hover:text-white transition-colors duration-300">
+          <h2 className={`text-lg md:text-xl font-bold ${styles.text} group-hover:text-white transition-colors duration-300`}>
             <Highlight text={post.title} highlight={highlightQuery} />
           </h2>
           <span className={`font-mono text-xs font-semibold rounded-full px-3 py-1 ${styles.bg} ${styles.text} inline-flex items-center flex-shrink-0 ml-4`}>
             {post.tag}
           </span>
         </div>
-        <p className="text-gray-400 leading-relaxed">
-          <Highlight text={post.short} highlight={highlightQuery} />
-        </p>
+        
+        {post.short && (
+          <p className="text-gray-400 leading-relaxed">
+            <Highlight text={post.short} highlight={highlightQuery} />
+          </p>
+        )}
 
         <div
           className={`
@@ -212,13 +305,13 @@ const PostCard: React.FC<PostCardProps> = ({ post, isExpanded, onToggleExpand, i
             </div>
             
             <div className="text-gray-300 leading-relaxed">
-                {renderFullText(post.full, highlightQuery)}
+                {renderedFullText}
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
+});
 
 export default PostCard;

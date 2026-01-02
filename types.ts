@@ -12,4 +12,5 @@ export interface Post {
   category: Category;
   tag: string;
   date: string;
+  layoutType?: 'default' | 'compact' | 'grid' | 'classic' | 'prominent';
 }
