@@ -137,15 +137,32 @@ const PostCard: React.FC<PostCardProps> = React.memo(({ post, isExpanded, onTogg
         }
 
         if (post.layoutType === 'prominent') {
+           const isList = item.marker === 'L';
+
            return (
             <div key={index} className="my-6 first:mt-2 last:mb-0">
                <strong className={`block ${styles.text} text-lg font-bold mb-2`}>
                  <Highlight text={item.title} highlight={highlightQuery} />
                </strong>
                <div className="pl-4 border-l-2 border-gray-700/30">
-                 <p className="text-gray-300 leading-relaxed">
-                   <Highlight text={item.description} highlight={highlightQuery} />
-                 </p>
+                 {isList ? (
+                   <ul className="list-none space-y-2 mt-2">
+                     {item.description.split(',').map((s) => s.trim()).filter((s) => s.length > 0).map((listItem, liIndex) => (
+                       <li key={liIndex} className="flex items-start text-gray-300 leading-relaxed">
+                         <div className="mr-3 mt-1.5 text-gray-600 flex-shrink-0">
+                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                             <line x1="5" y1="12" x2="19" y2="12" />
+                           </svg>
+                         </div>
+                         <span><Highlight text={listItem} highlight={highlightQuery} /></span>
+                       </li>
+                     ))}
+                   </ul>
+                 ) : (
+                   <p className="text-gray-300 leading-relaxed">
+                     <Highlight text={item.description} highlight={highlightQuery} />
+                   </p>
+                 )}
                </div>
             </div>
            );
