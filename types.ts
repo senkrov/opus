@@ -13,4 +13,9 @@ export interface Post {
   tag: string;
   date: string;
   layoutType?: 'default' | 'compact' | 'grid' | 'classic' | 'prominent';
+  image?: {
+    src: string;
+    alt?: string;
+    caption?: string;
+  };
 }

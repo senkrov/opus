@@ -61,7 +61,10 @@ const PostCard: React.FC<PostCardProps> = React.memo(({ post, isExpanded, onTogg
     const listRegex = /^\[(.+?)\]\s*(.*?):\s*(.*)/;
 
     // Collect all parsed items first to handle grid layout grouping
-    const items = lines.map((line) => {
+    const rawItems = lines.map((line) => {
+      if (line.trim() === '[IMG]') {
+        return { type: 'image' };
+      }
       const match = line.match(listRegex);
       if (match) {
         return { type: 'item', marker: match[1], title: match[2], description: match[3], original: line };
@@ -69,13 +72,29 @@ const PostCard: React.FC<PostCardProps> = React.memo(({ post, isExpanded, onTogg
       return { type: 'text', content: line };
     });
 
+    // If an image exists but no placeholder is found, default it to the top.
+    const items = (post.image && !rawItems.some(item => item.type === 'image'))
+      ? [{ type: 'image' }, ...rawItems]
+      : rawItems;
+
     if (post.layoutType === 'grid') {
-      const gridItems: React.ReactNode[] = [];
-      const textItems: React.ReactNode[] = [];
+      const renderedContent: React.ReactNode[] = [];
+      let currentGridBatch: React.ReactNode[] = [];
+
+      const flushGridBatch = () => {
+        if (currentGridBatch.length > 0) {
+          renderedContent.push(
+            <div key={`grid-batch-${renderedContent.length}`} className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 mb-4">
+              {currentGridBatch}
+            </div>
+          );
+          currentGridBatch = [];
+        }
+      };
       
       items.forEach((item, index) => {
         if (item.type === 'item') {
-           gridItems.push(
+           currentGridBatch.push(
             <div key={`grid-${index}`} className={`p-3 rounded-lg border ${styles.bg} ${styles.border} border-opacity-20`}>
               <strong className={`block ${styles.text} text-sm mb-1`}>
                 <Highlight text={item.title} highlight={highlightQuery} />
@@ -86,26 +105,62 @@ const PostCard: React.FC<PostCardProps> = React.memo(({ post, isExpanded, onTogg
             </div>
            );
         } else {
-           // If we have mixed content, push text as a full-width element, but for now just appending
-           textItems.push(
-            <p key={`text-${index}`} className="my-4 col-span-2">
-              <Highlight text={item.content} highlight={highlightQuery} />
-            </p>
-           );
+            // Flush any accumulated grid items before rendering non-grid content
+            flushGridBatch();
+
+            if (item.type === 'image' && post.image) {
+                renderedContent.push(
+                  <div key={`img-${index}`} className="my-6 rounded-lg overflow-hidden border border-gray-700/50 shadow-lg">
+                    <img 
+                      src={post.image.src} 
+                      alt={post.image.alt || post.title} 
+                      className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity duration-300" 
+                    />
+                    {post.image.caption && (
+                      <p className="p-2 text-center text-xs text-gray-500 bg-black/20 italic">
+                        {post.image.caption}
+                      </p>
+                    )}
+                  </div>
+                );
+            } else if (item.type === 'text') {
+               renderedContent.push(
+                <p key={`text-${index}`} className="my-4">
+                  <Highlight text={item.content} highlight={highlightQuery} />
+                </p>
+               );
+            }
         }
       });
+      
+      // Flush any remaining grid items
+      flushGridBatch();
 
       return (
         <div>
-           {textItems}
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-             {gridItems}
-           </div>
+           {renderedContent}
         </div>
       );
     }
 
     return items.map((item, index) => {
+      if (item.type === 'image' && post.image) {
+        return (
+          <div key={index} className="my-8 rounded-lg overflow-hidden border border-gray-700/50 shadow-lg">
+            <img 
+              src={post.image.src} 
+              alt={post.image.alt || post.title} 
+              className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity duration-300" 
+            />
+            {post.image.caption && (
+              <p className="p-2 text-center text-xs text-gray-500 bg-black/20 italic">
+                {post.image.caption}
+              </p>
+            )}
+          </div>
+        );
+      }
+
       if (item.type === 'item') {
         if (post.layoutType === 'compact') {
            return (
@@ -305,7 +360,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({ post, isExpanded, onTogg
         <div
           className={`
             transition-all duration-500 ease-in-out overflow-hidden
-            ${isExpanded ? 'max-h-[1000px] mt-6' : 'max-h-0 mt-0'}
+            ${isExpanded ? 'max-h-[20000px] mt-6' : 'max-h-0 mt-0'}
           `}
           aria-hidden={!isExpanded}
         >
@@ -320,7 +375,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({ post, isExpanded, onTogg
               <div className="flex-grow h-[1px] bg-gray-700/50"></div>
               <span className="font-mono text-xs text-gray-500 flex-shrink-0">{post.date}</span>
             </div>
-            
+
             <div className="text-gray-300 leading-relaxed">
                 {renderedFullText}
             </div>
