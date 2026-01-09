@@ -1,7 +1,7 @@
 
 export enum Category {
   Effort = 'effort',
-  Experience = 'experience',
+  Reflection = 'reflection',
 }
 
 export interface Post {

@@ -8,14 +8,18 @@ import Footer from './components/Footer';
 import PostCard from './components/PostCard';
 import CommandPalette from './components/CommandPalette';
 import { Category, Post } from './types';
-import { POSTS } from './constants';
+import { POSTS, TABS } from './constants';
 
 const App: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<Category | 'all'>('all');
   const [highlightQuery, setHighlightQuery] = useState('');
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Transition state management
+  const [transitionStage, setTransitionStage] = useState<'idle' | 'exiting' | 'entering'>('idle');
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
+  
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [searchTrigger, setSearchTrigger] = useState<{ postId: string; query: string } | null>(null);
 
@@ -43,15 +47,27 @@ const App: React.FC = () => {
 
   const handleFilterChange = useCallback((filter: Category | 'all') => {
     if (filter === activeFilter) return;
-    
-    setIsTransitioning(true);
+
+    const currentIndex = TABS.findIndex(t => t.key === activeFilter);
+    const newIndex = TABS.findIndex(t => t.key === filter);
+    const direction = newIndex > currentIndex ? 'right' : 'left';
+
+    setSlideDirection(direction);
+    setTransitionStage('exiting');
     setExpandedPostId(null);
     
-    // Allow the fade-out transition to complete before changing the filter and fading back in.
+    // 1. Wait for exit animation
     setTimeout(() => {
       setActiveFilter(filter);
-      setIsTransitioning(false);
-    }, 100);
+      setTransitionStage('entering');
+
+      // 2. Wait for render (instant jump to start position) then start entry animation
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTransitionStage('idle');
+        });
+      });
+    }, 300); // Match duration-300
   }, [activeFilter]);
   
   const handlePostSelect = useCallback((post: Post, query: string) => {
@@ -70,7 +86,7 @@ const App: React.FC = () => {
     // This creates a smoother visual flow for the user.
     setTimeout(() => {
       setExpandedPostId(uniqueId);
-    }, 150);
+    }, 350);
   }, [activeFilter, handleFilterChange]);
 
   const filteredPosts = useMemo(() => {
@@ -82,8 +98,37 @@ const App: React.FC = () => {
     return sortedPosts.filter((p) => p.category === activeFilter);
   }, [activeFilter]);
 
+  // Determine container classes based on transition stage
+  const getContainerClasses = (isEmpty: boolean) => {
+    const baseClasses = "w-full max-w-5xl grid grid-cols-1 gap-6 pt-8 pb-20";
+    
+    // If empty (no posts), we only want to fade, not slide.
+    if (isEmpty) {
+       if (transitionStage === 'idle') {
+         return `${baseClasses} transition-opacity duration-300 ease-out opacity-100`;
+       }
+       return `${baseClasses} transition-opacity duration-300 ease-in opacity-0`;
+    }
+
+    if (transitionStage === 'idle') {
+      return `${baseClasses} transition-all duration-300 ease-out opacity-100 translate-x-0`;
+    }
+
+    if (transitionStage === 'exiting') {
+      const translateClass = slideDirection === 'right' ? '-translate-x-[50vw]' : 'translate-x-[50vw]';
+      return `${baseClasses} transition-all duration-300 ease-in opacity-0 ${translateClass}`;
+    }
+
+    if (transitionStage === 'entering') {
+      const translateClass = slideDirection === 'right' ? 'translate-x-[50vw]' : '-translate-x-[50vw]';
+      return `${baseClasses} transition-none opacity-0 ${translateClass}`;
+    }
+    
+    return baseClasses;
+  };
+
   return (
-    <div className="bg-[#0D1117] text-gray-200 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900/50 via-[#0D1117] to-[#0D1117] flex flex-col min-h-screen">
+    <div className="bg-[#0D1117] text-gray-200 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900/50 via-[#0D1117] to-[#0D1117] flex flex-col min-h-screen overflow-x-hidden">
       <div className={`will-animate ${isLoaded ? 'animate-in' : ''}`} style={{ animationDelay: '100ms' }}>
         <Header
           onSearchClick={() => setIsPaletteOpen(true)}
@@ -95,7 +140,7 @@ const App: React.FC = () => {
         className="flex flex-col items-center w-full px-4 flex-grow"
         onClick={() => expandedPostId && setExpandedPostId(null)}
       >
-        <div className={`w-full max-w-5xl grid grid-cols-1 gap-6 pt-8 pb-20 transition-opacity duration-100 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+        <div className={getContainerClasses(filteredPosts.length === 0)}>
           {filteredPosts.length > 0 ? (
               filteredPosts.map((post, index) => {
                 const uniqueId = `${post.category}-${post.id}`;

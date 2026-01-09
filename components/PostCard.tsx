@@ -16,24 +16,28 @@ interface PostCardProps {
   onAnimationComplete: () => void;
 }
 
-const categoryStyles: Record<Category, { bg: string; text: string; border: string; glowHover: string; glowExpanded: string; spotlightColor: string; markerBg: string; }> = {
+const categoryStyles: Record<Category, { bg: string; text: string; borderColor: string; borderHover: string; glowHover: string; glowExpanded: string; spotlightColor: string; markerBg: string; textHover: string; }> = {
   [Category.Effort]: { 
     bg: 'bg-blue-400/10', 
     text: 'text-blue-300', 
-    border: 'hover:border-blue-500/50',
+    borderColor: 'border-gray-800',
+    borderHover: 'group-hover:border-blue-500/50',
     glowHover: 'group-hover:shadow-[0_0_20px_0_rgba(59,130,246,0.3)]',
     glowExpanded: 'shadow-[0_0_30px_-5px_rgba(59,130,246,0.4)]',
     spotlightColor: 'rgba(59, 130, 246, 0.08)',
     markerBg: 'bg-blue-400/20',
+    textHover: 'group-hover:text-blue-200',
   },
-  [Category.Experience]: { 
+  [Category.Reflection]: { 
     bg: 'bg-green-400/10', 
     text: 'text-green-300', 
-    border: 'hover:border-green-500/50',
+    borderColor: 'border-gray-800',
+    borderHover: 'group-hover:border-green-500/50',
     glowHover: 'group-hover:shadow-[0_0_20px_0_rgba(74,222,128,0.3)]',
     glowExpanded: 'shadow-[0_0_30px_-5px_rgba(74,222,128,0.4)]',
     spotlightColor: 'rgba(74, 222, 128, 0.08)',
     markerBg: 'bg-green-400/20',
+    textHover: 'group-hover:text-green-200',
   },
 };
 
@@ -316,12 +320,12 @@ const PostCard: React.FC<PostCardProps> = React.memo(({ post, isExpanded, onTogg
 
   const containerClasses = `
     relative overflow-hidden
-    bg-gray-900/30 border border-gray-800 rounded-xl p-4 md:p-6
-    transition-all duration-500 ease-in-out cursor-pointer group 
-    ${styles.border} 
-    ${isExpanded ? `${styles.glowExpanded} -translate-y-1` : `${styles.glowHover} group-hover:-translate-y-1`}
+    bg-gray-900/30 border rounded-xl p-4 md:p-6
+    transition-[shadow,background-color,border-color,opacity,saturate] duration-500 ease-in-out cursor-pointer group 
+    ${styles.borderColor} ${styles.borderHover}
+    ${isExpanded ? styles.glowExpanded : styles.glowHover}
     ${isDimmed ? 'opacity-50 saturate-50 scale-95' : 'opacity-100 saturate-100 scale-100'}
-    ${isExpanded ? 'bg-gray-900/80' : 'hover:bg-gray-900/80'}
+    ${isExpanded ? 'bg-gray-900/80 border-opacity-50' : 'hover:bg-gray-900/80'}
   `;
 
   return (
@@ -340,10 +344,10 @@ const PostCard: React.FC<PostCardProps> = React.memo(({ post, isExpanded, onTogg
         className="pointer-events-none absolute inset-0 rounded-xl transition-opacity duration-300"
         style={spotlightStyle}
       />
-      
+
       <div className="relative z-10">
         <div className="flex justify-between items-start mb-3">
-          <h2 className={`text-lg md:text-xl font-bold ${styles.text} group-hover:text-white transition-colors duration-300`}>
+          <h2 className={`text-lg md:text-xl font-bold ${styles.text} ${styles.textHover} transition-colors duration-300`}>
             <Highlight text={post.title} highlight={highlightQuery} />
           </h2>
           <span className={`font-mono text-xs font-semibold rounded-full px-3 py-1 ${styles.bg} ${styles.text} inline-flex items-center flex-shrink-0 ml-4`}>

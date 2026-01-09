@@ -38,7 +38,7 @@ const Tabs: React.FC<TabsProps> = ({ activeFilter, onFilterChange }) => {
     switch (filter) {
       case Category.Effort:
         return 'bg-blue-400';
-      case Category.Experience:
+      case Category.Reflection:
         return 'bg-green-400';
       case 'all':
       default:
